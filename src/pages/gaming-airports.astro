@@ -1,0 +1,91 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Breadcrumbs from '../components/Breadcrumbs.astro';
+import AirportCard from '../components/AirportCard.astro';
+import { getAirportsForGaming } from '../data/airports';
+import { getArticles } from '../data/articles';
+
+// Match gaming: IPLC/IEPL dedicated line services with UDP/FullCone or explicit gaming support
+const matchedAirports = getAirportsForGaming();
+const relatedArticles = getArticles().filter(a => a.slug.includes('gaming') || a.slug.includes('latency') || a.slug.includes('iplc'));
+---
+
+<Layout
+  title="游戏加速与低延迟机场选购指南｜UDP转发/专线支持 - 找机场"
+  description="游戏加速与低延迟机场专区：整理具备 IPLC / IEPL 专线、支持 UDP 转发或标明游戏特化线路的机场服务列表，提供外服联机配置与选购建议。"
+>
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+    <Breadcrumbs items={[{ label: '游戏加速机场' }]} />
+
+    <div class="bg-white rounded-2xl border border-slate-200/90 p-6 sm:p-8 mb-8">
+      <div class="inline-flex items-center gap-1.5 text-xs font-semibold text-sky-600 uppercase tracking-wider mb-2">
+        <span class="w-2 h-2 rounded-full bg-sky-600"></span>
+        网络联机专区 ｜ 游戏加速与低延迟专线
+      </div>
+      <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight mb-3">
+        游戏加速与低延迟机场整理
+      </h1>
+      <p class="text-sm text-slate-600 max-w-4xl leading-relaxed">
+        跨国游戏对网络抖动（Jitter）和丢包率较敏感。本专区汇总具备内网专线、支持 UDP 转发或提供游戏特化线路的机场供参考对比。
+      </p>
+
+      <div class="mt-4 pt-4 border-t border-slate-100 flex items-center gap-2 flex-wrap text-xs text-slate-500">
+        <span class="font-semibold text-slate-700">关键特性：</span>
+        <span class="badge-tag badge-brand">IPLC / IEPL 专线</span>
+        <span class="badge-tag badge-purple">支持 UDP 转发</span>
+        <span class="badge-tag badge-green">优化抖动与丢包</span>
+      </div>
+    </div>
+
+    <div class="mb-12">
+      <div class="flex items-center justify-between mb-6">
+        <h2 class="text-lg font-bold text-slate-900">
+          标注支持游戏/低延迟线路的机场（共 {matchedAirports.length} 家）
+        </h2>
+        <a href="/blog/gaming-acceleration-airports-guide/" class="text-xs font-semibold text-sky-600 hover:underline">
+          查看游戏加速专线技术解析 →
+        </a>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {matchedAirports.map((airport) => (
+          <AirportCard airport={airport} />
+        ))}
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2 space-y-6">
+        <div class="bg-white rounded-2xl border border-slate-200/90 p-6 shadow-sm">
+          <h2 class="text-base font-bold text-slate-900 mb-3 flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-sky-600"></span>
+            游戏加速配置与选购建议
+          </h2>
+          <div class="space-y-3 text-xs text-slate-600 leading-relaxed">
+            <p><strong>1. 开启 TUN 虚拟网卡模式</strong>：在 Clash Verge 或 sing-box 中开启 TUN 模式，接管游戏客户端的 UDP/TCP 流量。</p>
+            <p><strong>2. 优先选择近距离专线</strong>：距离游戏目标服务器所在地理位置越近，网络链路越短。实际延迟与抖动受本地宽带、运营商路由及晚高峰骨干网负载影响。</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="space-y-6">
+        <div class="bg-white rounded-2xl border border-slate-200/90 p-5 shadow-sm">
+          <h3 class="text-sm font-bold text-slate-900 mb-3 flex items-center gap-1.5">
+            <span class="w-1.5 h-1.5 rounded-full bg-sky-600"></span>
+            相关技术指南
+          </h3>
+          <div class="space-y-3">
+            {relatedArticles.map((art) => (
+              <a href={`/blog/${art.slug}/`} class="block group">
+                <p class="text-xs font-bold text-slate-800 group-hover:text-sky-600 transition leading-snug">
+                  {art.title}
+                </p>
+                <span class="text-[11px] text-slate-400 mt-0.5 inline-block">{art.readTime}</span>
+              </a>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</Layout>

@@ -1,0 +1,213 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import Breadcrumbs from '../../components/Breadcrumbs.astro';
+import AirportRecommendation from '../../components/AirportRecommendation.astro';
+import { getArticles, type Article } from '../../data/articles';
+import { getAirports, getRelatedAirports, type Airport } from '../../data/airports';
+import { renderMarkdown } from '../../utils/markdown';
+
+export async function getStaticPaths() {
+  const articles = getArticles();
+  return articles.map((article) => ({
+    params: { slug: article.slug },
+    props: { article },
+  }));
+}
+
+export interface Props {
+  article: Article;
+}
+
+const { article } = Astro.props;
+
+// Contextual Airport Matching based on article criteria
+const allAirports = getAirports();
+let matchedAirports: Airport[] = [];
+
+if (article.recommendationCriteria.region) {
+  matchedAirports = allAirports.filter(a => a.regions.includes(article.recommendationCriteria.region!) || a.nodeRegionsRaw.includes(article.recommendationCriteria.region!));
+} else if (article.recommendationCriteria.ai) {
+  matchedAirports = allAirports.filter(a => a.aiServices && a.aiServices.some(s => s.toLowerCase().includes('chatgpt')));
+} else if (article.recommendationCriteria.streaming) {
+  matchedAirports = allAirports.filter(a => a.streamingServices && a.streamingServices.some(s => s.toLowerCase().includes('netflix')));
+} else if (article.recommendationCriteria.client) {
+  const cl = article.recommendationCriteria.client.toLowerCase();
+  matchedAirports = allAirports.filter(a => a.clients.some(c => c.toLowerCase().includes(cl)) || a.clientSupport.toLowerCase().includes(cl));
+} else if (article.recommendationCriteria.maxPrice) {
+  matchedAirports = allAirports.filter(a => a.lowestMonthlyPrice !== null && a.lowestMonthlyPrice <= article.recommendationCriteria.maxPrice!);
+}
+
+if (matchedAirports.length < 3) {
+  matchedAirports = getRelatedAirports('', 3);
+}
+
+const relatedArticles = getArticles()
+  .filter((a) => a.slug !== article.slug && (a.category === article.category || a.keywords.some(k => article.keywords.includes(k))))
+  .slice(0, 3);
+
+const renderedContentHtml = renderMarkdown(article.content);
+
+const articleSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'Article',
+  headline: article.title,
+  description: article.description,
+  datePublished: `${article.publishDate}T08:00:00+08:00`,
+  dateModified: `${article.publishDate}T08:00:00+08:00`,
+  author: {
+    '@type': 'Organization',
+    name: article.author,
+    url: 'https://zhaojichang.cyou/'
+  },
+  publisher: {
+    '@type': 'Organization',
+    name: '找机场',
+    url: 'https://zhaojichang.cyou/'
+  },
+  mainEntityOfPage: {
+    '@type': 'WebPage',
+    '@id': `https://zhaojichang.cyou/blog/${article.slug}/`
+  }
+};
+
+const faqSchema = (article.faqs && article.faqs.length > 0) ? {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: article.faqs.map((faq) => ({
+    '@type': 'Question',
+    name: faq.question,
+    acceptedAnswer: {
+      '@type': 'Answer',
+      text: faq.answer
+    }
+  }))
+} : null;
+
+const fullSchema = faqSchema ? [articleSchema, faqSchema] : articleSchema;
+---
+
+<Layout
+  title={article.seoTitle}
+  description={article.description}
+  type="article"
+  publishDate={article.publishDate}
+  author={article.author}
+  schema={fullSchema}
+>
+  <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+    <Breadcrumbs
+      items={[
+        { label: '教程与指南', href: '/blog/' },
+        { label: article.categoryLabel, href: '/blog/' },
+        { label: article.title },
+      ]}
+    />
+
+    <!-- Article Header -->
+    <header class="bg-white rounded-2xl border border-slate-200/90 p-6 sm:p-8 mb-8">
+      <div class="flex items-center gap-2 mb-3">
+        <span class="badge-tag badge-brand text-xs">
+          {article.categoryLabel}
+        </span>
+        <span class="text-xs text-slate-400 font-medium">预计阅读 {article.readTime}</span>
+      </div>
+
+      <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight mb-4 leading-tight">
+        {article.title}
+      </h1>
+
+      <div class="flex items-center gap-4 text-xs text-slate-500 pt-3 border-t border-slate-100 flex-wrap">
+        <span>作者：{article.author}</span>
+        <span>发布日期：{article.publishDate}</span>
+        <span>来源：找机场 (zhaojichang.cyou)</span>
+      </div>
+    </header>
+
+    <!-- Article Content Card -->
+    <div class="bg-white rounded-2xl border border-slate-200/90 p-6 sm:p-10 shadow-sm space-y-6 text-sm text-slate-700 leading-relaxed">
+      <!-- Description Summary Box -->
+      <div class="p-4 bg-slate-50 rounded-xl border border-slate-200 text-xs text-slate-600 leading-relaxed">
+        <strong class="font-bold text-slate-800">核心导读：</strong>
+        {article.description}
+      </div>
+
+      <!-- Main Rendered Markdown Body -->
+      <div class="prose-content space-y-4" set:html={renderedContentHtml} />
+
+      <!-- Mandatory Contextual Airport Recommendation Module (Requirement 9) -->
+      <AirportRecommendation
+        title={article.recommendationTitle}
+        description={`根据《${article.title}》涉及的价格、节点、客户端或服务标签，从现有机场资料中匹配以下相关机场：`}
+        airports={matchedAirports}
+      />
+
+      <!-- FAQs -->
+      {article.faqs && article.faqs.length > 0 && (
+        <section class="mt-10 pt-6 border-t border-slate-200">
+          <h2 class="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-sky-600"></span>
+            常见问题解答 (FAQ)
+          </h2>
+          <div class="space-y-4">
+            {article.faqs.map((faq) => (
+              <div class="bg-slate-50 rounded-xl p-4 border border-slate-200">
+                <h3 class="text-sm font-bold text-slate-800 mb-1.5 flex items-start gap-2">
+                  <span class="text-sky-600 font-bold">Q:</span>
+                  <span>{faq.question}</span>
+                </h3>
+                <p class="text-xs text-slate-600 leading-relaxed pl-5">
+                  {faq.answer}
+                </p>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      <!-- Tags & Internal Cross-Links -->
+      <div class="pt-6 border-t border-slate-100 flex items-center gap-2 flex-wrap text-xs text-slate-500">
+        <span class="font-semibold text-slate-700">相关标签：</span>
+        {article.keywords.map((kw) => {
+          let tagHref = `/search/?q=${encodeURIComponent(kw)}`;
+          if (kw === '机场推荐' || kw === '2026机场推荐') {
+            tagHref = '/blog/airport-recommendations/';
+          } else if (kw === '梯子推荐' || kw === '2026梯子推荐') {
+            tagHref = '/blog/tizi-recommendations/';
+          }
+          return (
+            <a
+              href={tagHref}
+              class="px-2 py-0.5 rounded bg-slate-100 hover:bg-sky-50 hover:text-sky-600 text-slate-700 transition"
+            >
+              #{kw}
+            </a>
+          );
+        })}
+      </div>
+    </div>
+
+    <!-- Related Articles Section -->
+    <div class="mt-8 bg-white rounded-2xl border border-slate-200/90 p-6 shadow-sm">
+      <h3 class="text-base font-bold text-slate-900 mb-4 flex items-center gap-2">
+        <span class="w-2 h-2 rounded-full bg-sky-600"></span>
+        推荐阅读相关指南
+      </h3>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {relatedArticles.map((rel) => (
+          <a
+            href={`/blog/${rel.slug}/`}
+            class="p-4 rounded-xl bg-slate-50 border border-slate-200 hover:bg-sky-50/50 hover:border-sky-300 transition group flex flex-col justify-between"
+          >
+            <h4 class="text-xs font-bold text-slate-800 group-hover:text-sky-600 transition line-clamp-2 mb-2 leading-snug">
+              {rel.title}
+            </h4>
+            <div class="text-[11px] text-slate-400 flex items-center justify-between">
+              <span>{rel.categoryLabel}</span>
+              <span>{rel.readTime}</span>
+            </div>
+          </a>
+        ))}
+      </div>
+    </div>
+  </div>
+</Layout>

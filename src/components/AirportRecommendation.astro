@@ -1,0 +1,59 @@
+---
+import type { Airport } from '../data/airports';
+import AirportCard from './AirportCard.astro';
+
+export interface Props {
+  title?: string;
+  description?: string;
+  airports: Airport[];
+  categorySlug?: string;
+}
+
+const {
+  title = '相关机场资料速览',
+  description = '根据本文涉及的价格、节点、客户端或服务标签，从现有机场资料中匹配以下相关机场：',
+  airports,
+  categorySlug
+} = Astro.props;
+---
+
+<div class="my-10 bg-slate-50/70 rounded-2xl border border-slate-200/90 p-6 sm:p-8 shadow-2xs">
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+    <div>
+      <div class="flex items-center gap-2 mb-1">
+        <span class="w-2 h-2 rounded-full bg-sky-600 inline-block"></span>
+        <h3 class="text-base font-bold text-slate-900 tracking-tight">
+          {title}
+        </h3>
+      </div>
+      <p class="text-xs text-slate-600">
+        {description}
+      </p>
+    </div>
+
+    {categorySlug && (
+      <a
+        href={`/${categorySlug}/`}
+        class="inline-flex items-center gap-1 text-xs font-medium text-slate-700 hover:text-sky-600 bg-white px-3 py-1.5 rounded-lg border border-slate-200 shadow-2xs shrink-0 transition"
+      >
+        查看该分类完整列表
+        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+        </svg>
+      </a>
+    )}
+  </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+    {airports.slice(0, 3).map((airport) => (
+      <AirportCard airport={airport} />
+    ))}
+  </div>
+
+  <div class="mt-6 pt-4 border-t border-slate-200/80 flex items-center justify-between text-xs text-slate-500">
+    <span>提示：以上信息整理自服务商公开资料，实际使用体验因网络与具体时段而异。</span>
+    <a href="/airports/" class="text-sky-600 hover:underline font-medium shrink-0 ml-2">
+      查看机场大全目录 →
+    </a>
+  </div>
+</div>

@@ -1,0 +1,91 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Breadcrumbs from '../components/Breadcrumbs.astro';
+import AirportCard from '../components/AirportCard.astro';
+import { getAirportsByClient } from '../data/airports';
+import { getArticles } from '../data/articles';
+
+const matchedAirports = getAirportsByClient('clash');
+const relatedArticles = getArticles().filter(a => a.slug.includes('clash') || a.slug.includes('subscription') || a.slug.includes('sing-box'));
+---
+
+<Layout
+  title="Clash机场推荐｜适配 Clash Verge / Meta 订阅与分流 - 找机场"
+  description="Clash机场推荐专区：精选支持 Clash / Clash Verge Rev / OpenClash 一键导入与智能规则分流的机场服务。提供一键订阅、故障自动转移与规则直连分流。"
+>
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+    <Breadcrumbs items={[{ label: 'Clash 机场' }]} />
+
+    <div class="bg-white rounded-2xl border border-slate-200/90 p-6 sm:p-8 mb-8">
+      <div class="inline-flex items-center gap-1.5 text-xs font-semibold text-sky-600 uppercase tracking-wider mb-2">
+        <span class="w-2 h-2 rounded-full bg-sky-600"></span>
+        客户端专题 ｜ Clash / Clash Verge Rev
+      </div>
+      <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight mb-3">
+        Clash 机场推荐与配置指南
+      </h1>
+      <p class="text-sm text-slate-600 max-w-4xl leading-relaxed">
+        Clash 作为当前最主流的规则代理平台，支持灵活的规则分流、自动测速择优（URL-Test）与软路由透明代理。本专区精选原生支持 Clash 订阅格式的高稳定性专线机场。
+      </p>
+
+      <div class="mt-4 pt-4 border-t border-slate-100 flex items-center gap-2 flex-wrap text-xs text-slate-500">
+        <span class="font-semibold text-slate-700">适配特性：</span>
+        <span class="badge-tag badge-brand">原生 Clash YAML 订阅</span>
+        <span class="badge-tag badge-green">支持 URL-Test 自动测速</span>
+        <span class="badge-tag badge-purple">支持 Domestic 规则直连</span>
+      </div>
+    </div>
+
+    <div class="mb-12">
+      <div class="flex items-center justify-between mb-6">
+        <h2 class="text-lg font-bold text-slate-900">
+          资料标注支持 Clash 的机场（共 {matchedAirports.length} 家）
+        </h2>
+        <a href="/blog/clash-verge-tutorial-windows-mac/" class="text-xs font-semibold text-sky-600 hover:underline">
+          查看 Clash Verge 电脑配置教程 →
+        </a>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {matchedAirports.map((airport) => (
+          <AirportCard airport={airport} />
+        ))}
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2 space-y-6">
+        <div class="bg-white rounded-2xl border border-slate-200/90 p-6 shadow-sm">
+          <h2 class="text-base font-bold text-slate-900 mb-3 flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-sky-600"></span>
+            Clash 客户端使用技巧
+          </h2>
+          <div class="space-y-3 text-xs text-slate-600 leading-relaxed">
+            <p><strong>1. 优先使用规则模式 (Rule Mode)</strong>：确保国内网站与微信走直连，海外受限网站走代理，兼顾速度与流量消耗。</p>
+            <p><strong>2. 善用自动选择策略组 (Auto/URL-Test)</strong>：让客户端每隔几分钟自动检测最低延迟节点，发生网络抖动时无感切换。</p>
+            <p><strong>3. 推荐客户端版本</strong>：桌面端优先选择 <strong>Clash Verge Rev</strong>，Android 手机端推荐 <strong>Clash Meta for Android</strong>。</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="space-y-6">
+        <div class="bg-white rounded-2xl border border-slate-200/90 p-5 shadow-sm">
+          <h3 class="text-sm font-bold text-slate-900 mb-3 flex items-center gap-1.5">
+            <span class="w-1.5 h-1.5 rounded-full bg-sky-600"></span>
+            Clash 相关教程
+          </h3>
+          <div class="space-y-3">
+            {relatedArticles.map((art) => (
+              <a href={`/blog/${art.slug}/`} class="block group">
+                <p class="text-xs font-bold text-slate-800 group-hover:text-sky-600 transition leading-snug">
+                  {art.title}
+                </p>
+                <span class="text-[11px] text-slate-400 mt-0.5 inline-block">{art.readTime}</span>
+              </a>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</Layout>

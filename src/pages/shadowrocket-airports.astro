@@ -1,0 +1,91 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Breadcrumbs from '../components/Breadcrumbs.astro';
+import AirportCard from '../components/AirportCard.astro';
+import { getAirportsByClient } from '../data/airports';
+import { getArticles } from '../data/articles';
+
+const matchedAirports = getAirportsByClient('shadowrocket');
+const relatedArticles = getArticles().filter(a => a.slug.includes('shadowrocket') || a.slug.includes('how-to-choose') || a.slug.includes('subscription'));
+---
+
+<Layout
+  title="Shadowrocket机场推荐｜苹果小火箭一键导入与分流配置 - 找机场"
+  description="Shadowrocket（小火箭）机场推荐：针对 iPhone / iPad 苹果设备精选支持扫码导入、一键订阅与规则分流的适配机场。低功耗运行，流畅访问海外流媒体与 AI 应用。"
+>
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+    <Breadcrumbs items={[{ label: 'Shadowrocket 机场' }]} />
+
+    <div class="bg-white rounded-2xl border border-slate-200/90 p-6 sm:p-8 mb-8">
+      <div class="inline-flex items-center gap-1.5 text-xs font-semibold text-sky-600 uppercase tracking-wider mb-2">
+        <span class="w-2 h-2 rounded-full bg-sky-600"></span>
+        iOS 苹果生态 ｜ Shadowrocket 小火箭
+      </div>
+      <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight mb-3">
+        Shadowrocket (小火箭) 机场推荐
+      </h1>
+      <p class="text-sm text-slate-600 max-w-4xl leading-relaxed">
+        Shadowrocket（小火箭）是 iOS 上常见的规则代理客户端之一。本专区整理资料标注支持 Shadowrocket 扫码与 URL 一键订阅的专线与直连机场。
+      </p>
+
+      <div class="mt-4 pt-4 border-t border-slate-100 flex items-center gap-2 flex-wrap text-xs text-slate-500">
+        <span class="font-semibold text-slate-700">小火箭适配特性：</span>
+        <span class="badge-tag badge-brand">一键扫码/URL订阅</span>
+        <span class="badge-tag badge-green">支持配置分流模式</span>
+        <span class="badge-tag badge-purple">后台低耗电稳定连接</span>
+      </div>
+    </div>
+
+    <div class="mb-12">
+      <div class="flex items-center justify-between mb-6">
+        <h2 class="text-lg font-bold text-slate-900">
+          支持 Shadowrocket 小火箭的机场（共 {matchedAirports.length} 家）
+        </h2>
+        <a href="/blog/shadowrocket-airport-setup-guide/" class="text-xs font-semibold text-sky-600 hover:underline">
+          查看小火箭从零配置图文教程 →
+        </a>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {matchedAirports.map((airport) => (
+          <AirportCard airport={airport} />
+        ))}
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2 space-y-6">
+        <div class="bg-white rounded-2xl border border-slate-200/90 p-6 shadow-sm">
+          <h2 class="text-base font-bold text-slate-900 mb-3 flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-sky-600"></span>
+            小火箭使用必读要点
+          </h2>
+          <div class="space-y-3 text-xs text-slate-600 leading-relaxed">
+            <p><strong>1. 全局路由务必设为【配置】</strong>：切勿选【代理】模式，否则国内微信、外卖等 App 也会消耗代理流量并增加耗电。</p>
+            <p><strong>2. 定期连通性测试</strong>：在 App 首页点击“连通性测试 (Ping)”，挑选绿色低延迟节点使用。</p>
+            <p><strong>3. 开启自动更新订阅</strong>：在设置中开启“打开时更新订阅”，确保节点列表始终保持最新。</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="space-y-6">
+        <div class="bg-white rounded-2xl border border-slate-200/90 p-5 shadow-sm">
+          <h3 class="text-sm font-bold text-slate-900 mb-3 flex items-center gap-1.5">
+            <span class="w-1.5 h-1.5 rounded-full bg-sky-600"></span>
+            相关新手指南
+          </h3>
+          <div class="space-y-3">
+            {relatedArticles.map((art) => (
+              <a href={`/blog/${art.slug}/`} class="block group">
+                <p class="text-xs font-bold text-slate-800 group-hover:text-sky-600 transition leading-snug">
+                  {art.title}
+                </p>
+                <span class="text-[11px] text-slate-400 mt-0.5 inline-block">{art.readTime}</span>
+              </a>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</Layout>

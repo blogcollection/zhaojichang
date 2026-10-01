@@ -1,0 +1,131 @@
+---
+import type { Airport } from '../data/airports';
+
+export interface Props {
+  airport: Airport;
+}
+
+const { airport } = Astro.props;
+
+// Format prices
+const hasMonthly = airport.lowestMonthlyPrice !== null && airport.lowestMonthlyPrice > 0;
+const hasAnnual = airport.lowestAnnualPrice !== null && airport.lowestAnnualPrice > 0;
+const hasOneTime = airport.lowestOneTimePrice !== null && airport.lowestOneTimePrice > 0;
+---
+
+<div class="bg-white rounded-xl border border-slate-200/90 shadow-sm hover:shadow-md hover:border-sky-300 transition-all duration-200 flex flex-col justify-between overflow-hidden group">
+  <!-- Top Section -->
+  <div class="p-5">
+    <!-- Header with Name & Badges -->
+    <div class="flex items-start justify-between gap-2 mb-3">
+      <div>
+        <div class="flex items-center gap-2 flex-wrap">
+          <h3 class="text-base font-bold text-slate-900 group-hover:text-sky-600 transition">
+            <a href={`/airport/${airport.slug}/`}>
+              {airport.name}
+            </a>
+          </h3>
+          {airport.lineArchitecture.includes('IPLC') && (
+            <span class="badge-tag badge-brand text-[11px]">IPLC 专线</span>
+          )}
+          {airport.lineArchitecture.includes('IEPL') && (
+            <span class="badge-tag badge-purple text-[11px]">IEPL 专线</span>
+          )}
+        </div>
+        {airport.aliases && airport.aliases !== '暂无别名' && (
+          <p class="text-xs text-slate-500 mt-0.5">别名：{airport.aliases}</p>
+        )}
+      </div>
+
+      <!-- Price Callout -->
+      <div class="text-right shrink-0">
+        {hasMonthly ? (
+          <div>
+            <span class="text-xs text-slate-500">起步</span>
+            <div class="text-lg font-extrabold text-sky-600 leading-none">
+              ¥{airport.lowestMonthlyPrice}<span class="text-xs font-normal text-slate-500">/月</span>
+            </div>
+          </div>
+        ) : hasAnnual ? (
+          <div>
+            <span class="text-xs text-slate-500">年付</span>
+            <div class="text-lg font-extrabold text-sky-600 leading-none">
+              ¥{airport.lowestAnnualPrice}<span class="text-xs font-normal text-slate-500">/年</span>
+            </div>
+          </div>
+        ) : (
+          <div class="text-sm font-semibold text-slate-600">以官网为准</div>
+        )}
+      </div>
+    </div>
+
+    <!-- Summary / Feature Highlight -->
+    <p class="text-xs text-slate-600 line-clamp-2 mb-3.5 leading-relaxed">
+      {airport.summary.replace(/^摘要：/, '')}
+    </p>
+
+    <!-- Key Metadata Tags -->
+    <div class="space-y-2 text-xs">
+      <!-- Node Regions -->
+      <div class="flex items-center gap-1.5 flex-wrap">
+        <span class="text-[11px] font-medium text-slate-500 shrink-0">节点地区:</span>
+        {airport.regions.slice(0, 5).map((region) => (
+          <span class="px-1.5 py-0.5 rounded bg-slate-100 text-slate-700 text-[11px]">
+            {region}
+          </span>
+        ))}
+        {airport.regions.length > 5 && (
+          <span class="text-[10px] text-slate-600">+{airport.regions.length - 5}区</span>
+        )}
+      </div>
+
+      <!-- Streaming & AI Unlock -->
+      {(airport.aiServices.length > 0 || airport.streamingServices.length > 0) && (
+        <div class="flex items-center gap-1.5 flex-wrap">
+          <span class="text-[11px] font-medium text-slate-500 shrink-0">标注解锁:</span>
+          {airport.aiServices.slice(0, 2).map((ai) => (
+            <span class="px-1.5 py-0.5 rounded bg-amber-50 text-amber-700 border border-amber-200/60 text-[11px]">
+              {ai}
+            </span>
+          ))}
+          {airport.streamingServices.slice(0, 2).map((st) => (
+            <span class="px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200/60 text-[11px]">
+              {st}
+            </span>
+          ))}
+        </div>
+      )}
+
+      <!-- Additional price notes -->
+      <div class="flex items-center gap-3 text-[11px] text-slate-500 pt-1">
+        {hasAnnual && <span>年付 ¥{airport.lowestAnnualPrice} 起</span>}
+        {hasOneTime && <span>不限时 ¥{airport.lowestOneTimePrice} 起</span>}
+        {airport.deviceOrUsageLimits && (
+          <span class="truncate max-w-[150px]">{airport.deviceOrUsageLimits.includes('不限制') ? '资料标注不限设备' : '多设备支持'}</span>
+        )}
+      </div>
+    </div>
+  </div>
+
+  <!-- Bottom CTA & Actions -->
+  <div class="bg-slate-50/80 px-5 py-3 border-t border-slate-100 flex items-center justify-between gap-3">
+    <a
+      href={`/airport/${airport.slug}/`}
+      class="text-xs font-medium text-slate-700 hover:text-sky-600 flex items-center gap-1 transition"
+    >
+      查看详情与资费
+      <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+      </svg>
+    </a>
+
+    <a
+      href={airport.url}
+      target="_blank"
+      rel="nofollow sponsored noopener noreferrer"
+      class="inline-flex items-center justify-center px-3.5 py-1.5 text-xs font-semibold text-white bg-sky-600 hover:bg-sky-700 rounded-lg shadow-sm transition"
+    >
+      前往官网
+    </a>
+  </div>
+</div>

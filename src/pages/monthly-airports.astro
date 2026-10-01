@@ -1,0 +1,91 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Breadcrumbs from '../components/Breadcrumbs.astro';
+import AirportCard from '../components/AirportCard.astro';
+import { getMonthlyAirports } from '../data/airports';
+import { getArticles } from '../data/articles';
+
+const matchedAirports = getMonthlyAirports();
+const relatedArticles = getArticles().filter(a => a.slug.includes('monthly') || a.slug.includes('choose') || a.slug.includes('rug'));
+---
+
+<Layout
+  title="月付机场推荐｜支持按月续费与无套路机场精选 - 找机场"
+  description="月付机场推荐目录：精选支持单月购买、低门槛续费的机场服务商。拒绝长期套牢风险，随用随充，保障个人资金与网络灵活性。"
+>
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+    <Breadcrumbs items={[{ label: '月付机场' }]} />
+
+    <div class="bg-white rounded-2xl border border-slate-200/90 p-6 sm:p-8 mb-8">
+      <div class="inline-flex items-center gap-1.5 text-xs font-semibold text-sky-600 uppercase tracking-wider mb-2">
+        <span class="w-2 h-2 rounded-full bg-sky-600"></span>
+        灵活付款 ｜ 零资金风险
+      </div>
+      <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight mb-3">
+        月付机场精选推荐
+      </h1>
+      <p class="text-sm text-slate-600 max-w-4xl leading-relaxed">
+        为什么老玩家始终提倡“首选月付”？月付不仅能将单次支出控制在 ¥15~¥25 的极低区间，更能随时根据机场晚高峰网络表现与维护状态进行无痛切换。
+      </p>
+
+      <div class="mt-4 pt-4 border-t border-slate-100 flex items-center gap-2 flex-wrap text-xs text-slate-500">
+        <span class="font-semibold text-slate-700">筛选原则：</span>
+        <span class="badge-tag badge-brand">原生支持单月购买</span>
+        <span class="badge-tag badge-green">无捆绑强制年付</span>
+        <span class="badge-tag badge-slate">全平台一键导入</span>
+      </div>
+    </div>
+
+    <div class="mb-12">
+      <div class="flex items-center justify-between mb-6">
+        <h2 class="text-lg font-bold text-slate-900">
+          支持月付的机场服务（共 {matchedAirports.length} 家）
+        </h2>
+        <a href="/airports/" class="text-xs font-semibold text-sky-600 hover:underline">
+          查看全部机场大全 →
+        </a>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {matchedAirports.map((airport) => (
+          <AirportCard airport={airport} />
+        ))}
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2 space-y-6">
+        <div class="bg-white rounded-2xl border border-slate-200/90 p-6 shadow-sm">
+          <h2 class="text-base font-bold text-slate-900 mb-3 flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-sky-600"></span>
+            为什么月付是消费者最强有力的保障？
+          </h2>
+          <div class="space-y-3 text-xs text-slate-600 leading-relaxed">
+            <p><strong>1. 倒逼服务商维护质量</strong>：月付用户次月是否续费直接决定了机场的现金流，服务商必须时刻优化线路。</p>
+            <p><strong>2. 规避政策与上游机房突发风险</strong>：国际海缆与出口网络环境多变，月付能随时撤离转投新线路。</p>
+            <p><strong>3. 降低闲置成本</strong>：对于假期或特定工作周期出海的用户，按月订阅用完即停最划算。</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="space-y-6">
+        <div class="bg-white rounded-2xl border border-slate-200/90 p-5 shadow-sm">
+          <h3 class="text-sm font-bold text-slate-900 mb-3 flex items-center gap-1.5">
+            <span class="w-1.5 h-1.5 rounded-full bg-sky-600"></span>
+            相关深度指南
+          </h3>
+          <div class="space-y-3">
+            {relatedArticles.map((art) => (
+              <a href={`/blog/${art.slug}/`} class="block group">
+                <p class="text-xs font-bold text-slate-800 group-hover:text-sky-600 transition leading-snug">
+                  {art.title}
+                </p>
+                <span class="text-[11px] text-slate-400 mt-0.5 inline-block">{art.readTime}</span>
+              </a>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</Layout>

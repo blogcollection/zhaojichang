@@ -1,0 +1,125 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Breadcrumbs from '../components/Breadcrumbs.astro';
+import AirportCard from '../components/AirportCard.astro';
+import { getCheapAirports } from '../data/airports';
+import { getArticlesByCategory } from '../data/articles';
+
+const matchedAirports = getCheapAirports(20);
+const relatedArticles = getArticlesByCategory('compare');
+
+const faqs = [
+  {
+    q: '便宜机场（¥10~¥20/月）的稳定性能满足日常需求吗？',
+    a: '可以。主流高性价比机场通过 BGP 隧道中转或优化路由，在白天和非高峰时段表现优良，完全能满足 Google 搜索、文献查阅、社交媒体以及 1080P/4K 视频的基本需求。'
+  },
+  {
+    q: '购买便宜机场最需要防范什么？',
+    a: '最核心是防范“大额年付后跑路”与“晚高峰断流”。因此务必坚持按月续费，并且配置 1 个备用按量流量包。'
+  }
+];
+---
+
+<Layout
+  title="便宜机场怎么找？2026低价高性价比机场筛选与避坑指南 - 找机场"
+  description="便宜机场选购指南：精选月付¥10~¥20元以内的低价高性价比机场。解析低价机场优缺点、晚高峰带宽抗压能力、计费倍率陷阱与防跑路月付策略。"
+>
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+    <Breadcrumbs items={[{ label: '便宜机场' }]} />
+
+    <!-- Page Header & Filtering Intro -->
+    <div class="bg-white rounded-2xl border border-slate-200/90 p-6 sm:p-8 mb-8">
+      <div class="inline-flex items-center gap-1.5 text-xs font-semibold text-sky-600 uppercase tracking-wider mb-2">
+        <span class="w-2 h-2 rounded-full bg-sky-600"></span>
+        高性价比专区 ｜ ≤ ¥20/月
+      </div>
+      <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight mb-3">
+        便宜机场推荐与低价避坑指南
+      </h1>
+      <p class="text-sm text-slate-600 max-w-4xl leading-relaxed">
+        本文筛选了当前月付在 <strong>¥10 ~ ¥20 元以内</strong> 的真实加速机场服务商。低价并不等于劣质，关键在于看清线路中转类型、倍率扣费规则与支付周期。
+      </p>
+
+      <!-- Selection Criteria Badges -->
+      <div class="mt-4 pt-4 border-t border-slate-100 flex items-center gap-2 flex-wrap text-xs text-slate-500">
+        <span class="font-semibold text-slate-700">筛选条件：</span>
+        <span class="badge-tag badge-brand">最低月费 ≤ ¥20</span>
+        <span class="badge-tag badge-green">支持月付/季付</span>
+        <span class="badge-tag badge-slate">支持 Clash / 小火箭</span>
+      </div>
+    </div>
+
+    <!-- Airport Grid -->
+    <div class="mb-12">
+      <div class="flex items-center justify-between mb-6">
+        <h2 class="text-lg font-bold text-slate-900">
+          符合条件的便宜机场（共 {matchedAirports.length} 家）
+        </h2>
+        <a href="/airports/?price=10-20" class="text-xs font-semibold text-sky-600 hover:underline">
+          去机场大全高级筛选 →
+        </a>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {matchedAirports.map((airport) => (
+          <AirportCard airport={airport} />
+        ))}
+      </div>
+    </div>
+
+    <!-- Editorial Guide & FAQ Section -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2 space-y-6">
+        <!-- Strategy Guide -->
+        <div class="bg-white rounded-2xl border border-slate-200/90 p-6 shadow-sm">
+          <h2 class="text-base font-bold text-slate-900 mb-3 flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-sky-600"></span>
+            选购低价便宜机场的 4 项黄金法则
+          </h2>
+          <div class="space-y-3 text-xs text-slate-600 leading-relaxed">
+            <p><strong>1. 坚决小额月付</strong>：不要被“买一年送一年”或“¥99 终身套餐”所诱惑，按月支付能将风险降到最低。</p>
+            <p><strong>2. 避开高倍率节点</strong>：购买前检查节点列表，优先选择 1x 倍率节点多的服务商。</p>
+            <p><strong>3. 关注晚高峰体验</strong>：在 20:00 - 23:00 黄金时段实测 1080P/4K 视频加载速度。</p>
+            <p><strong>4. 主备双修策略</strong>：主力选择月付低价机场，同时备用一个不限时按量流量包。</p>
+          </div>
+        </div>
+
+        <!-- FAQs -->
+        <div class="bg-white rounded-2xl border border-slate-200/90 p-6 shadow-sm">
+          <h2 class="text-base font-bold text-slate-900 mb-4 flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-sky-600"></span>
+            便宜机场常见疑问 (FAQ)
+          </h2>
+          <div class="space-y-4">
+            {faqs.map((faq) => (
+              <div class="border-b border-slate-100 pb-3 last:border-0">
+                <h3 class="text-sm font-bold text-slate-800 mb-1">Q: {faq.q}</h3>
+                <p class="text-xs text-slate-600 leading-relaxed">A: {faq.a}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Related Articles -->
+      <div class="space-y-6">
+        <div class="bg-white rounded-2xl border border-slate-200/90 p-5 shadow-sm">
+          <h3 class="text-sm font-bold text-slate-900 mb-3 flex items-center gap-1.5">
+            <span class="w-1.5 h-1.5 rounded-full bg-sky-600"></span>
+            相关选购避坑指南
+          </h3>
+          <div class="space-y-3">
+            {relatedArticles.map((art) => (
+              <a href={`/blog/${art.slug}/`} class="block group">
+                <p class="text-xs font-bold text-slate-800 group-hover:text-sky-600 transition leading-snug">
+                  {art.title}
+                </p>
+                <span class="text-[11px] text-slate-400 mt-0.5 inline-block">{art.readTime}</span>
+              </a>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</Layout>

@@ -1,0 +1,91 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Breadcrumbs from '../components/Breadcrumbs.astro';
+import AirportCard from '../components/AirportCard.astro';
+import { getAirportsByAIService } from '../data/airports';
+import { getArticles } from '../data/articles';
+
+const matchedAirports = getAirportsByAIService('chatgpt');
+const relatedArticles = getArticles().filter(a => a.slug.includes('chatgpt') || a.slug.includes('google-works') || a.slug.includes('node-regions'));
+---
+
+<Layout
+  title="ChatGPT机场怎么选？2026 AI专用节点机场查找指南 - 找机场"
+  description="ChatGPT机场专区：整理标注支持 ChatGPT / Claude / Gemini / Midjourney 原生访问的专线与直连机场，提供常见风控规避与节点选购建议。"
+>
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+    <Breadcrumbs items={[{ label: 'ChatGPT 机场' }]} />
+
+    <div class="bg-white rounded-2xl border border-slate-200/90 p-6 sm:p-8 mb-8">
+      <div class="inline-flex items-center gap-1.5 text-xs font-semibold text-sky-600 uppercase tracking-wider mb-2">
+        <span class="w-2 h-2 rounded-full bg-sky-600"></span>
+        AI 工具访问 ｜ ChatGPT / Claude / Midjourney
+      </div>
+      <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight mb-3">
+        ChatGPT / AI 适用节点机场整理
+      </h1>
+      <p class="text-sm text-slate-600 max-w-4xl leading-relaxed">
+        主流 AI 工具对访问 IP 的地理位置与欺诈分有较多限制。本专区汇总服务商宣称或用户反馈支持 ChatGPT 等 AI 服务解锁的机场服务列表。
+      </p>
+
+      <div class="mt-4 pt-4 border-t border-slate-100 flex items-center gap-2 flex-wrap text-xs text-slate-500">
+        <span class="font-semibold text-slate-700">筛选维度：</span>
+        <span class="badge-tag badge-amber">纯净 IP 线路</span>
+        <span class="badge-tag badge-brand">美/日/新节点覆盖</span>
+        <span class="badge-tag badge-green">标注 AI 服务支持</span>
+      </div>
+    </div>
+
+    <div class="mb-12">
+      <div class="flex items-center justify-between mb-6">
+        <h2 class="text-lg font-bold text-slate-900">
+          标注支持 ChatGPT / AI 的机场（共 {matchedAirports.length} 家）
+        </h2>
+        <a href="/blog/best-airports-for-chatgpt-and-ai/" class="text-xs font-semibold text-sky-600 hover:underline">
+          查看 AI 防风控与选购指南 →
+        </a>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {matchedAirports.map((airport) => (
+          <AirportCard airport={airport} />
+        ))}
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2 space-y-6">
+        <div class="bg-white rounded-2xl border border-slate-200/90 p-6 shadow-sm">
+          <h2 class="text-base font-bold text-slate-900 mb-3 flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-sky-600"></span>
+            使用 ChatGPT 的关键避坑建议
+          </h2>
+          <div class="space-y-3 text-xs text-slate-600 leading-relaxed">
+            <p><strong>1. 切勿使用香港节点</strong>：OpenAI 官方未向中国香港地区开放服务，连接香港节点通常提示地区不支持。</p>
+            <p><strong>2. 保持单一地区固定登录</strong>：避免短时间内频繁在美国、新加坡与欧洲节点之间跳切，频繁更换登录地极易触发账户审计。</p>
+            <p><strong>3. 优先选择专线机场标记的【原生节点】</strong>：此类节点具备更低的欺诈分（Fraud Score），会话保持更稳定。</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="space-y-6">
+        <div class="bg-white rounded-2xl border border-slate-200/90 p-5 shadow-sm">
+          <h3 class="text-sm font-bold text-slate-900 mb-3 flex items-center gap-1.5">
+            <span class="w-1.5 h-1.5 rounded-full bg-sky-600"></span>
+            AI 相关深度教程
+          </h3>
+          <div class="space-y-3">
+            {relatedArticles.map((art) => (
+              <a href={`/blog/${art.slug}/`} class="block group">
+                <p class="text-xs font-bold text-slate-800 group-hover:text-sky-600 transition leading-snug">
+                  {art.title}
+                </p>
+                <span class="text-[11px] text-slate-400 mt-0.5 inline-block">{art.readTime}</span>
+              </a>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</Layout>

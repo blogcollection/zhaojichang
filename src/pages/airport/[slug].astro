@@ -1,0 +1,490 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import Breadcrumbs from '../../components/Breadcrumbs.astro';
+import AirportCard from '../../components/AirportCard.astro';
+import { getAirports, getRelatedAirports, type Airport } from '../../data/airports';
+import { getFeaturedArticles } from '../../data/articles';
+
+export async function getStaticPaths() {
+  const airports = getAirports();
+  return airports.map((airport) => ({
+    params: { slug: airport.slug },
+    props: { airport },
+  }));
+}
+
+export interface Props {
+  airport: Airport;
+}
+
+const { airport } = Astro.props;
+const relatedAirports = getRelatedAirports(airport.slug, 3, {
+  region: airport.regions[0],
+  ai: airport.aiServices.length > 0,
+  streaming: airport.streamingServices.length > 0,
+});
+const relatedGuides = getFeaturedArticles(3);
+
+const hasMonthly = airport.lowestMonthlyPrice !== null && airport.lowestMonthlyPrice > 0;
+const hasAnnual = airport.lowestAnnualPrice !== null && airport.lowestAnnualPrice > 0;
+const hasOneTime = airport.lowestOneTimePrice !== null && airport.lowestOneTimePrice > 0;
+
+function parseCell(val: string) {
+  if (!val) return { isUrl: false, text: '', url: '' };
+  const urlMatch = val.match(/(https?:\/\/[^\s\)\"\']+)/i);
+  if (urlMatch) {
+    const url = urlMatch[1];
+    let label = val.replace(urlMatch[0], '').replace(/[\(\)\（\）\s]/g, '').trim();
+    if (!label) {
+      label = val.includes('咨询') ? '咨询购买' : '立即购买';
+    }
+    return { isUrl: true, text: label, url };
+  }
+  return { isUrl: false, text: val, url: '' };
+}
+---
+
+<Layout
+  title={`${airport.name} 资料概览｜价格套餐、节点地区与支持客户端 - 找机场`}
+  description={`${airport.name}服务商资料整理：最低¥${airport.lowestMonthlyPrice ?? airport.lowestAnnualPrice ?? '—'}起，线路架构为${airport.lineArchitecture}，覆盖${airport.regions.join('、')}等地区，支持主流客户端订阅。`}
+>
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+    <Breadcrumbs
+      items={[
+        { label: '机场大全', href: '/airports/' },
+        { label: airport.name },
+      ]}
+    />
+
+    <!-- Airport Hero Banner Card -->
+    <div class="bg-white rounded-2xl border border-slate-200/90 shadow-sm p-6 sm:p-8 mb-6">
+      <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+        <div>
+          <div class="flex items-center gap-2.5 flex-wrap mb-2">
+            <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
+              {airport.name}
+            </h1>
+            {airport.lineArchitecture.includes('IPLC') && (
+              <span class="badge-tag badge-brand text-xs">IPLC 专线</span>
+            )}
+            {airport.lineArchitecture.includes('IEPL') && (
+              <span class="badge-tag badge-purple text-xs">IEPL 专线</span>
+            )}
+            <span class="badge-tag badge-slate text-xs">公开资料整理</span>
+          </div>
+
+          {airport.aliases && airport.aliases !== '暂无别名' && (
+            <p class="text-xs text-slate-500 mb-2">别名：{airport.aliases}</p>
+          )}
+
+          <p class="text-sm text-slate-600 max-w-3xl leading-relaxed">
+            {airport.summary.replace(/^摘要：/, '')}
+          </p>
+        </div>
+
+        <!-- Pricing Callout & CTA Button -->
+        <div class="bg-slate-50 rounded-xl border border-slate-200 p-5 shrink-0 flex flex-col sm:flex-row lg:flex-col items-start sm:items-center lg:items-end justify-between gap-4">
+          <div>
+            <span class="text-xs text-slate-500">起步方案资费</span>
+            <div class="text-2xl font-black text-sky-600 leading-tight">
+              {hasMonthly ? (
+                <>¥{airport.lowestMonthlyPrice}<span class="text-xs font-normal text-slate-500"> / 月起</span></>
+              ) : hasAnnual ? (
+                <>¥{airport.lowestAnnualPrice}<span class="text-xs font-normal text-slate-500"> / 年起</span></>
+              ) : (
+                <span class="text-base font-bold text-slate-700">以官网为准</span>
+              )}
+            </div>
+            <div class="text-[11px] text-slate-500 mt-0.5">
+              {hasAnnual && <span>年付 ¥{airport.lowestAnnualPrice} 起 ｜ </span>}
+              {hasOneTime && <span>不限时 ¥{airport.lowestOneTimePrice} 起</span>}
+            </div>
+          </div>
+
+          <div class="w-full sm:w-auto">
+            <a
+              href={airport.url}
+              target="_blank"
+              rel="nofollow sponsored noopener noreferrer"
+              class="w-full sm:w-auto text-center px-6 py-2.5 text-sm font-bold text-white bg-sky-600 hover:bg-sky-700 rounded-xl shadow-sm transition inline-block"
+            >
+              前往服务商官网
+            </a>
+            <p class="text-[10px] text-slate-400 text-center sm:text-right mt-1.5">
+              * 部分链接含推广参数，购买前请以官网最新条款为准
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Clear Verification & Testing Disclaimer (P0 Requirement) -->
+    <div class="p-4 bg-slate-100/90 rounded-xl border border-slate-200 text-xs text-slate-600 leading-relaxed mb-8 flex items-start gap-2.5">
+      <svg class="w-4 h-4 text-slate-500 mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+      <span>
+        <strong>资料说明：</strong>以下线路、解锁与性能信息主要整理自服务商公开资料，本站未对所有项目进行独立实时测试，实际表现会因地区、运营商、设备和时段而变化。
+      </span>
+    </div>
+
+    <!-- Main Content Layout -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <!-- Left 2 Cols: Comprehensive Breakdown -->
+      <div class="lg:col-span-2 space-y-8">
+        <!-- 1. 基础资料与规格参数 -->
+        <section class="bg-white rounded-2xl border border-slate-200/90 p-6 shadow-sm">
+          <h2 class="text-lg font-bold text-slate-900 mb-4 pb-2 border-b border-slate-100 flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-sky-600"></span>
+            基础资料与服务规格
+          </h2>
+
+          <div class="overflow-x-auto">
+            <table class="pro-table">
+              <tbody>
+                <tr>
+                  <td class="w-32 font-semibold text-slate-700 bg-slate-50/70">服务商名称</td>
+                  <td>{airport.name} {airport.aliases !== '暂无别名' ? `(${airport.aliases})` : ''}</td>
+                </tr>
+                <tr>
+                  <td class="font-semibold text-slate-700 bg-slate-50/70">线路架构</td>
+                  <td>{airport.lineArchitecture}</td>
+                </tr>
+                <tr>
+                  <td class="font-semibold text-slate-700 bg-slate-50/70">传输协议</td>
+                  <td>{airport.protocols || 'Shadowsocks / VLESS / Trojan / VMess (以服务商实际订阅为准)'}</td>
+                </tr>
+                <tr>
+                  <td class="font-semibold text-slate-700 bg-slate-50/70">节点地区覆盖</td>
+                  <td>{airport.nodeRegionsRaw || airport.regions.join('、')}</td>
+                </tr>
+                <tr>
+                  <td class="font-semibold text-slate-700 bg-slate-50/70">设备连接限制</td>
+                  <td>{airport.deviceOrUsageLimits || '以服务商套餐规则为准'}</td>
+                </tr>
+                <tr>
+                  <td class="font-semibold text-slate-700 bg-slate-50/70">客户端兼容</td>
+                  <td>{airport.clientSupport || '支持常见通用客户端'}</td>
+                </tr>
+                <tr>
+                  <td class="font-semibold text-slate-700 bg-slate-50/70">支持操作系统</td>
+                  <td>{airport.platforms || 'iOS, Android, Windows, macOS, Linux, 路由器'}</td>
+                </tr>
+                <tr>
+                  <td class="font-semibold text-slate-700 bg-slate-50/70">支付方式</td>
+                  <td>{airport.paymentMethods || '支付宝、微信支付、加密货币（以服务商结算页为准）'}</td>
+                </tr>
+                <tr>
+                  <td class="font-semibold text-slate-700 bg-slate-50/70">折扣与优惠</td>
+                  <td>{airport.discounts || '以官网周期结算折扣为准'}</td>
+                </tr>
+                <tr>
+                  <td class="font-semibold text-slate-700 bg-slate-50/70">标注解锁支持</td>
+                  <td>
+                    {airport.aiServices.length > 0 && (
+                      <span class="text-amber-700 font-medium">AI: {airport.aiServices.join('、')} ｜ </span>
+                    )}
+                    {airport.streamingServices.length > 0 && (
+                      <span class="text-emerald-700 font-medium">流媒体: {airport.streamingServices.join('、')}</span>
+                    )}
+                    {airport.aiServices.length === 0 && airport.streamingServices.length === 0 && '以服务商官方实时落地为准'}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- 2. 详细套餐价格表 (Rendered from real plans_json) -->
+        <section class="bg-white rounded-2xl border border-slate-200/90 p-6 shadow-sm">
+          <h2 class="text-lg font-bold text-slate-900 mb-4 pb-2 border-b border-slate-100 flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-sky-600"></span>
+            详细套餐与资费价格表
+          </h2>
+
+          {airport.plans && airport.plans.length > 0 ? (
+            <div class="space-y-8">
+              {airport.plans.map((section) => {
+                const validRows = section.rows.filter(
+                  (r) => !Object.values(r).some((v) => v.includes(':---') || v.includes(':-:'))
+                );
+                const columns = Object.keys(section.rows[0] || {});
+
+                return (
+                  <div>
+                    <h3 class="text-sm font-bold text-slate-800 mb-3 text-sky-700 flex items-center gap-1.5">
+                      <span class="w-1.5 h-1.5 rounded-full bg-sky-500"></span>
+                      {section.section}
+                    </h3>
+
+                    {/* Desktop Table (≥ 768px) */}
+                    <div class="hidden md:block overflow-x-auto rounded-xl border border-slate-200">
+                      <table class="pro-table min-w-full">
+                        <thead>
+                          <tr>
+                            {columns.map((col) => (
+                              <th class="whitespace-nowrap">{col}</th>
+                            ))}
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {validRows.map((row) => (
+                            <tr>
+                              {columns.map((col) => {
+                                const val = row[col] || '';
+                                const parsed = parseCell(val);
+                                return (
+                                  <td class="font-medium text-slate-800">
+                                    {parsed.isUrl ? (
+                                      <a
+                                        href={parsed.url}
+                                        target="_blank"
+                                        rel="nofollow sponsored noopener noreferrer"
+                                        class="inline-flex items-center justify-center px-3 py-1.5 text-xs font-semibold text-white bg-sky-600 hover:bg-sky-700 rounded-lg transition shadow-2xs whitespace-nowrap"
+                                      >
+                                        {parsed.text}
+                                      </a>
+                                    ) : (
+                                      <span>{val}</span>
+                                    )}
+                                  </td>
+                                );
+                              })}
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+
+                    {/* Mobile Vertical Cards (< 768px) */}
+                    <div class="md:hidden space-y-4">
+                      {validRows.map((row) => {
+                        const entries = Object.entries(row);
+                        const titleIndex = entries.findIndex(([k]) => /(名称|套餐|方案)/.test(k));
+                        const titleEntry = titleIndex !== -1 ? entries[titleIndex] : entries[0];
+                        const planTitle = titleEntry ? titleEntry[1] : '套餐方案';
+                        const detailEntries = entries.filter((_, idx) =>
+                          titleIndex !== -1 ? idx !== titleIndex : idx !== 0
+                        );
+
+                        let actionUrl = airport.url;
+                        let actionText = '前往官网购买';
+                        for (const [_, v] of entries) {
+                          const parsed = parseCell(v);
+                          if (parsed.isUrl) {
+                            actionUrl = parsed.url;
+                            actionText = parsed.text;
+                            break;
+                          }
+                        }
+
+                        return (
+                          <div class="bg-slate-50/70 rounded-xl border border-slate-200 p-4 space-y-3">
+                            <div class="flex items-center justify-between pb-2 border-b border-slate-200">
+                              <h4 class="text-sm font-bold text-slate-900">{planTitle}</h4>
+                              <span class="text-[10px] font-semibold text-sky-700 bg-sky-100/70 px-2 py-0.5 rounded-full">
+                                {section.section.replace(/^\d+\.\s*/, '')}
+                              </span>
+                            </div>
+
+                            <div class="space-y-2">
+                              {detailEntries.map(([k, v]) => {
+                                const parsed = parseCell(v);
+                                if (parsed.isUrl) return null;
+                                return (
+                                  <div class="flex flex-col py-1 border-b border-slate-100 last:border-b-0 text-xs">
+                                    <span class="text-slate-400 font-medium text-[11px] mb-0.5">{k}</span>
+                                    <span class="text-slate-700 font-semibold leading-relaxed break-words whitespace-normal">{v}</span>
+                                  </div>
+                                );
+                              })}
+                            </div>
+
+                            <div class="pt-2">
+                              <a
+                                href={actionUrl}
+                                target="_blank"
+                                rel="nofollow sponsored noopener noreferrer"
+                                class="w-full inline-flex items-center justify-center py-2.5 px-4 bg-sky-600 hover:bg-sky-700 text-white font-semibold text-xs rounded-xl shadow-2xs transition"
+                              >
+                                {actionText} →
+                              </a>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <p class="text-xs text-slate-500">
+              暂未提取到结构化套餐明细，请直接点击前往服务商官网查看最新价格方案。
+            </p>
+          )}
+        </section>
+
+        <!-- 3. 适合人群 vs 不适合人群 -->
+        <section class="bg-white rounded-2xl border border-slate-200/90 p-6 shadow-sm">
+          <h2 class="text-lg font-bold text-slate-900 mb-4 pb-2 border-b border-slate-100 flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-sky-600"></span>
+            选购适用场景分析
+          </h2>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <!-- 适合谁 -->
+            <div class="bg-emerald-50/60 rounded-xl border border-emerald-200/80 p-5">
+              <h3 class="text-sm font-bold text-emerald-900 flex items-center gap-2 mb-3">
+                <svg class="w-4 h-4 text-emerald-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
+                适合哪些需求？
+              </h3>
+              <ul class="space-y-2 text-xs text-emerald-800">
+                {airport.suitableFor.map((item) => (
+                  <li class="flex items-start gap-1.5">
+                    <span class="text-emerald-500 font-bold">•</span>
+                    <span>{item}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <!-- 不适合谁 -->
+            <div class="bg-rose-50/60 rounded-xl border border-rose-200/80 p-5">
+              <h3 class="text-sm font-bold text-rose-900 flex items-center gap-2 mb-3">
+                <svg class="w-4 h-4 text-rose-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+                不适合哪些需求？
+              </h3>
+              <ul class="space-y-2 text-xs text-rose-800">
+                {airport.notSuitableFor.map((item) => (
+                  <li class="flex items-start gap-1.5">
+                    <span class="text-rose-500 font-bold">•</span>
+                    <span>{item}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        </section>
+
+        <!-- 4. 购买与使用避坑建议 -->
+        <section class="bg-white rounded-2xl border border-slate-200/90 p-6 shadow-sm">
+          <h2 class="text-lg font-bold text-slate-900 mb-3 pb-2 border-b border-slate-100 flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-sky-600"></span>
+            服务商说明与选购建议
+          </h2>
+
+          <div class="text-xs text-slate-700 space-y-3 leading-relaxed">
+            {airport.featureBullets.length > 0 && (
+              <div class="space-y-2">
+                {airport.featureBullets.map((bullet) => (
+                  <div class="p-3 bg-slate-50 rounded-lg border border-slate-100 flex items-start gap-2">
+                    <span class="text-sky-600 font-bold">•</span>
+                    <span>{bullet}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <div class="p-4 bg-slate-50 rounded-xl border border-slate-200 text-slate-700 mt-4">
+              <strong class="font-bold block mb-1">选购建议：</strong>
+              <p>{airport.purchaseAdvice}</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- 5. 相似/相关机场推荐 -->
+        <section class="bg-white rounded-2xl border border-slate-200/90 p-6 shadow-sm">
+          <h2 class="text-lg font-bold text-slate-900 mb-4 pb-2 border-b border-slate-100 flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-sky-600"></span>
+            可进一步比较的相关机场
+          </h2>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {relatedAirports.map((rel) => (
+              <AirportCard airport={rel} />
+            ))}
+          </div>
+        </section>
+      </div>
+
+      <!-- Right 1 Col: Quick Specs & Helpful Guides -->
+      <div class="space-y-6">
+        <!-- Direct CTA Box -->
+        <div class="bg-slate-900 text-white rounded-2xl p-6 shadow-md text-center">
+          <h3 class="text-base font-bold mb-1">前往 {airport.name} 官网</h3>
+          <p class="text-xs text-slate-400 mb-5">获取服务商最新订阅与方案信息</p>
+          <a
+            href={airport.url}
+            target="_blank"
+            rel="nofollow sponsored noopener noreferrer"
+            class="block w-full py-2.5 bg-sky-600 hover:bg-sky-500 text-white font-semibold text-xs rounded-xl shadow-sm transition"
+          >
+            访问官网
+          </a>
+        </div>
+
+        <!-- Node Regions Tag Cloud -->
+        <div class="bg-white rounded-2xl border border-slate-200/90 p-5 shadow-sm">
+          <h3 class="text-sm font-bold text-slate-900 mb-3 flex items-center gap-1.5">
+            <span class="w-1.5 h-1.5 rounded-full bg-sky-600"></span>
+            资料标注地区
+          </h3>
+          <div class="flex items-center gap-1.5 flex-wrap">
+            {airport.regions.map((region) => (
+              <a
+                href={`/airports/?region=${region}`}
+                class="px-2.5 py-1 bg-slate-100 hover:bg-sky-50 hover:text-sky-600 text-slate-700 text-xs rounded-md transition"
+              >
+                {region}
+              </a>
+            ))}
+          </div>
+        </div>
+
+        <!-- Compatible Clients -->
+        <div class="bg-white rounded-2xl border border-slate-200/90 p-5 shadow-sm">
+          <h3 class="text-sm font-bold text-slate-900 mb-3 flex items-center gap-1.5">
+            <span class="w-1.5 h-1.5 rounded-full bg-sky-600"></span>
+            支持客户端软件
+          </h3>
+          <div class="space-y-2 text-xs">
+            <a href="/clash-airports/" class="flex items-center justify-between p-2 rounded bg-slate-50 hover:bg-sky-50 transition">
+              <span class="font-medium text-slate-700">Clash / Clash Verge</span>
+              <span class="text-sky-600">查看说明 →</span>
+            </a>
+            <a href="/shadowrocket-airports/" class="flex items-center justify-between p-2 rounded bg-slate-50 hover:bg-sky-50 transition">
+              <span class="font-medium text-slate-700">Shadowrocket (小火箭)</span>
+              <span class="text-sky-600">查看说明 →</span>
+            </a>
+            <a href="/blog/sing-box-universal-proxy-starter-guide/" class="flex items-center justify-between p-2 rounded bg-slate-50 hover:bg-sky-50 transition">
+              <span class="font-medium text-slate-700">sing-box 通用代理</span>
+              <span class="text-sky-600">查看说明 →</span>
+            </a>
+          </div>
+        </div>
+
+        <!-- Relevant Starter Guides -->
+        <div class="bg-white rounded-2xl border border-slate-200/90 p-5 shadow-sm">
+          <h3 class="text-sm font-bold text-slate-900 mb-3 flex items-center gap-1.5">
+            <span class="w-1.5 h-1.5 rounded-full bg-sky-600"></span>
+            相关选购指南
+          </h3>
+          <div class="space-y-3">
+            {relatedGuides.map((g) => (
+              <a href={`/blog/${g.slug}/`} class="block group">
+                <p class="text-xs font-bold text-slate-800 group-hover:text-sky-600 transition leading-snug">
+                  {g.title}
+                </p>
+                <span class="text-[11px] text-slate-400 mt-0.5 inline-block">{g.readTime}</span>
+              </a>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</Layout>

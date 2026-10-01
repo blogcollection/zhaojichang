@@ -1,0 +1,58 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import AirportFilter from '../../components/AirportFilter.astro';
+import Breadcrumbs from '../../components/Breadcrumbs.astro';
+import { getAirports } from '../../data/airports';
+
+const allAirports = getAirports();
+---
+
+<Layout
+  title="机场大全｜按价格、节点和用途找机场 - 找机场"
+  description="找机场全库目录：系统整理 31+ 家主流机场服务商，支持按价格区间（月付/年付/不限时）、节点地区（香港/日本/新加坡/美国）、协议及流媒体与 AI 解锁能力实时筛选与排序。"
+>
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+    <Breadcrumbs items={[{ label: '机场大全' }]} />
+
+    <!-- Page Header -->
+    <div class="mb-8">
+      <div class="inline-flex items-center gap-1.5 text-xs font-semibold text-sky-600 uppercase tracking-wider mb-1">
+        <span class="w-2 h-2 rounded-full bg-sky-600"></span>
+        全库数据目录
+      </div>
+      <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight mb-2">
+        机场大全
+      </h1>
+      <p class="text-xs sm:text-sm text-slate-600 max-w-3xl leading-relaxed">
+        收录当前主流加速机场，提供价格、付款周期、节点地区覆盖、客户端兼容性与流媒体/AI支持多维智能筛选。所有数据均基于服务商公开资料真实呈现，拒绝虚假刷榜。
+      </p>
+    </div>
+
+    <!-- Filter & Directory Component -->
+    <AirportFilter airports={allAirports} />
+
+    <!-- SEO Guide Context at bottom -->
+    <div class="mt-16 bg-white rounded-xl border border-slate-200/90 p-6 sm:p-8 space-y-4 text-xs text-slate-600 leading-relaxed">
+      <h2 class="text-base font-bold text-slate-900">
+        如何高效利用机场大全目录找到最适合你的服务？
+      </h2>
+      <p>
+        在挑选机场时，建议综合考虑你的<strong>网络带宽需求</strong>、<strong>主力使用场景</strong>与<strong>预算承受力</strong>：
+      </p>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
+        <div class="bg-slate-50 p-4 rounded-lg border border-slate-200">
+          <h3 class="font-bold text-slate-800 mb-1">1. 预算优先（¥10-¥20/月）</h3>
+          <p class="text-slate-500">适合日常学习、查阅文档与轻度社交。推荐使用价格筛选器勾选 ≤¥20，优先选择支持月付的基础版套餐。</p>
+        </div>
+        <div class="bg-slate-50 p-4 rounded-lg border border-slate-200">
+          <h3 class="font-bold text-slate-800 mb-1">2. 流媒体追剧与 AI 效率</h3>
+          <p class="text-slate-500">经常使用 ChatGPT / Claude 或观看 4K Netflix，请点击“ChatGPT/AI”或“Netflix”标签，筛选具备原生纯净 IP 的专线机场。</p>
+        </div>
+        <div class="bg-slate-50 p-4 rounded-lg border border-slate-200">
+          <h3 class="font-bold text-slate-800 mb-1">3. 跨国游戏与晚高峰稳定</h3>
+          <p class="text-slate-500">玩外服游戏或晚高峰高频办公，请选择全线搭载 IPLC / IEPL 专线的服务商，享受低延迟与更稳定的网络保障。</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</Layout>

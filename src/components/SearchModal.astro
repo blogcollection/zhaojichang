@@ -1,0 +1,197 @@
+---
+import { airports } from '../data/airports';
+import { articles } from '../data/articles';
+
+// Prepare lightweight search index for fast client-side searching
+const searchItems = [
+  ...airports.map((a) => ({
+    type: 'airport' as const,
+    title: a.name,
+    subtitle: `¥${a.lowestMonthlyPrice ?? a.lowestAnnualPrice ?? '—'}起 ｜ 节点：${a.regions.slice(0, 4).join('、')} ｜ ${a.lineArchitecture}`,
+    url: `/airport/${a.slug}/`,
+    keywords: `${a.name} ${a.aliases} ${a.regions.join(' ')} ${a.protocols} ${a.aiServices.join(' ')} ${a.streamingServices.join(' ')} ${a.summary}`.toLowerCase(),
+    tag: '机场服务',
+    tagClass: 'bg-sky-50 text-sky-700 border-sky-200'
+  })),
+  ...articles.map((art) => ({
+    type: 'article' as const,
+    title: art.title,
+    subtitle: `${art.categoryLabel} ｜ ${art.readTime} ｜ ${art.description.slice(0, 45)}...`,
+    url: `/blog/${art.slug}/`,
+    keywords: `${art.title} ${art.description} ${art.keywords.join(' ')} ${art.categoryLabel}`.toLowerCase(),
+    tag: '使用教程',
+    tagClass: 'bg-emerald-50 text-emerald-700 border-emerald-200'
+  }))
+];
+---
+
+<div
+  id="search-modal"
+  class="fixed inset-0 z-50 hidden bg-slate-900/60 backdrop-blur-xs flex items-start justify-center pt-16 sm:pt-24 px-4 overflow-y-auto"
+  role="dialog"
+  aria-modal="true"
+>
+  <div
+    id="search-modal-container"
+    class="w-full max-w-2xl bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden transform transition-all"
+  >
+    <!-- Search Header & Input -->
+    <div class="p-4 border-b border-slate-200 flex items-center gap-3 bg-slate-50/50">
+      <svg class="w-5 h-5 text-sky-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+      </svg>
+      <input
+        type="text"
+        id="modal-search-input"
+        placeholder="搜索机场名称、别名、节点地区（香港/日本/美国）、ChatGPT/Netflix 解锁或使用教程..."
+        class="w-full bg-transparent text-sm text-slate-800 placeholder-slate-400 focus:outline-none"
+        autocomplete="off"
+      />
+      <button
+        type="button"
+        id="close-search-modal"
+        class="text-xs text-slate-400 hover:text-slate-700 px-2 py-1 rounded bg-white border border-slate-200 hover:bg-slate-100 transition shrink-0"
+      >
+        ESC
+      </button>
+    </div>
+
+    <!-- Quick Tags -->
+    <div class="px-4 py-2.5 bg-white border-b border-slate-100 flex items-center gap-2 overflow-x-auto scrollbar-none text-xs text-slate-500">
+      <span class="text-[11px] text-slate-400 shrink-0">热门搜索：</span>
+      <button type="button" class="search-quick-tag px-2 py-0.5 rounded bg-slate-100 hover:bg-sky-50 hover:text-sky-600 transition" data-query="便宜机场">便宜机场</button>
+      <button type="button" class="search-quick-tag px-2 py-0.5 rounded bg-slate-100 hover:bg-sky-50 hover:text-sky-600 transition" data-query="ChatGPT">ChatGPT</button>
+      <button type="button" class="search-quick-tag px-2 py-0.5 rounded bg-slate-100 hover:bg-sky-50 hover:text-sky-600 transition" data-query="香港节点">香港节点</button>
+      <button type="button" class="search-quick-tag px-2 py-0.5 rounded bg-slate-100 hover:bg-sky-50 hover:text-sky-600 transition" data-query="Clash">Clash</button>
+      <button type="button" class="search-quick-tag px-2 py-0.5 rounded bg-slate-100 hover:bg-sky-50 hover:text-sky-600 transition" data-query="Shadowrocket">小火箭</button>
+      <button type="button" class="search-quick-tag px-2 py-0.5 rounded bg-slate-100 hover:bg-sky-50 hover:text-sky-600 transition" data-query="IPLC专线">IPLC专线</button>
+    </div>
+
+    <!-- Search Results Container -->
+    <div id="modal-search-results" class="max-h-96 overflow-y-auto p-2 space-y-1 divide-y divide-slate-100">
+      <!-- Default state: prompt -->
+      <div class="py-12 text-center text-xs text-slate-400">
+        输入关键词搜索机场目录或教程指南
+      </div>
+    </div>
+
+    <!-- Footer Help -->
+    <div class="p-3 bg-slate-50 border-t border-slate-100 text-[11px] text-slate-400 flex items-center justify-between">
+      <span>支持搜索全部 31+ 家机场与 22 篇深度指南</span>
+      <span>按 <kbd class="px-1 py-0.5 bg-white border border-slate-200 rounded text-[10px]">ESC</kbd> 退出</span>
+    </div>
+  </div>
+</div>
+
+<script define:vars={{ searchItems }}>
+  function initSearchModal() {
+    const modal = document.getElementById('search-modal');
+    const input = document.getElementById('modal-search-input');
+    const resultsContainer = document.getElementById('modal-search-results');
+    const closeBtn = document.getElementById('close-search-modal');
+    const searchBtns = [
+      document.getElementById('global-search-btn'),
+      document.getElementById('hero-search-trigger')
+    ].filter(Boolean);
+
+    if (!modal || !input || !resultsContainer) return;
+
+    function openModal(defaultText = '') {
+      modal.classList.remove('hidden');
+      document.body.style.overflow = 'hidden';
+      input.value = defaultText;
+      input.focus();
+      renderResults(defaultText);
+    }
+
+    function closeModal() {
+      modal.classList.add('hidden');
+      document.body.style.overflow = '';
+    }
+
+    searchBtns.forEach(btn => {
+      btn?.addEventListener('click', () => openModal());
+    });
+
+    closeBtn?.addEventListener('click', closeModal);
+
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) closeModal();
+    });
+
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && !modal.classList.contains('hidden')) {
+        closeModal();
+      }
+      if ((e.key === '/' || ((e.metaKey || e.ctrlKey) && e.key === 'k')) && modal.classList.contains('hidden')) {
+        const targetTag = (e.target || {}).tagName;
+        if (targetTag !== 'INPUT' && targetTag !== 'TEXTAREA') {
+          e.preventDefault();
+          openModal();
+        }
+      }
+    });
+
+    // Quick tags
+    document.querySelectorAll('.search-quick-tag').forEach(tag => {
+      tag.addEventListener('click', () => {
+        const q = tag.dataset.query || '';
+        input.value = q;
+        renderResults(q);
+      });
+    });
+
+    function renderResults(rawQuery) {
+      const q = rawQuery.trim().toLowerCase();
+      if (!q) {
+        resultsContainer.innerHTML = `
+          <div class="py-8 text-center text-xs text-slate-400">
+            请输入关键词（如 "Sogo云"、"香港"、"月付"、"ChatGPT"）
+          </div>
+        `;
+        return;
+      }
+
+      const matched = searchItems.filter(item => item.keywords.includes(q));
+
+      if (matched.length === 0) {
+        resultsContainer.innerHTML = `
+          <div class="py-10 text-center text-xs text-slate-400">
+            <p class="font-medium text-slate-600 mb-1">未找到与 "${rawQuery}" 相关的内容</p>
+            <p>请尝试搜索其他地区（如日本、新加坡）或工具（如 Clash、Shadowrocket）</p>
+          </div>
+        `;
+        return;
+      }
+
+      let html = '';
+      matched.forEach(item => {
+        html += `
+          <a href="${item.url}" class="flex items-center justify-between p-3 rounded-lg hover:bg-sky-50/70 transition group">
+            <div class="pr-3 overflow-hidden">
+              <div class="flex items-center gap-2 mb-0.5">
+                <span class="text-xs px-1.5 py-0.5 rounded border text-[11px] font-medium ${item.tagClass}">
+                  ${item.tag}
+                </span>
+                <span class="text-sm font-semibold text-slate-800 group-hover:text-sky-600 transition truncate">
+                  ${item.title}
+                </span>
+              </div>
+              <p class="text-xs text-slate-500 truncate">${item.subtitle}</p>
+            </div>
+            <svg class="w-4 h-4 text-slate-300 group-hover:text-sky-600 group-hover:translate-x-0.5 transition shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+            </svg>
+          </a>
+        `;
+      });
+      resultsContainer.innerHTML = html;
+    }
+
+    input.addEventListener('input', (e) => {
+      renderResults(e.target.value);
+    });
+  }
+
+  document.addEventListener('DOMContentLoaded', initSearchModal);
+</script>

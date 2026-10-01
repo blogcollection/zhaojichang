@@ -1,0 +1,34 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout
+  title="404 - 页面未找到 - 找机场"
+  description="抱歉，您访问的页面不存在或已被移除。"
+  noindex={true}
+>
+  <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16 text-center">
+    <div class="w-16 h-16 rounded-full bg-sky-100 text-sky-600 font-black text-2xl mx-auto flex items-center justify-center mb-4">
+      404
+    </div>
+    <h1 class="text-2xl font-bold text-slate-900 mb-2">抱歉，您访问的页面不存在</h1>
+    <p class="text-xs text-slate-500 max-w-md mx-auto mb-6">
+      该页面可能已被移动或链接有误。您可以返回首页或使用机场大全搜索所需节点服务。
+    </p>
+
+    <div class="flex items-center justify-center gap-3">
+      <a
+        href="/"
+        class="px-4 py-2 text-xs font-semibold text-white bg-sky-600 hover:bg-sky-700 rounded-lg shadow-sm transition"
+      >
+        返回首页
+      </a>
+      <a
+        href="/airports/"
+        class="px-4 py-2 text-xs font-semibold text-slate-700 bg-white border border-slate-200 hover:bg-slate-50 rounded-lg shadow-2xs transition"
+      >
+        查看机场大全
+      </a>
+    </div>
+  </div>
+</Layout>

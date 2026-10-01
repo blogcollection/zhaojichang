@@ -1,0 +1,501 @@
+---
+import Layout from '../layouts/Layout.astro';
+import AirportCard from '../components/AirportCard.astro';
+import { getAirports, getCatalogOverviewAirports, getCheapAirports } from '../data/airports';
+import { getFeaturedArticles } from '../data/articles';
+
+const allAirports = getAirports();
+const overviewAirports = getCatalogOverviewAirports(8);
+const cheapAirports = getCheapAirports(20);
+const featuredArticles = getFeaturedArticles(6);
+
+// Quick Tag Shortcuts
+const quickTags = [
+  { name: '机场推荐', href: '/blog/airport-recommendations/', badge: '选购指南' },
+  { name: '梯子推荐', href: '/blog/tizi-recommendations/', badge: '科学上网' },
+  { name: '便宜机场', href: '/cheap-airports/', badge: '¥10起' },
+  { name: '专线机场', href: '/gaming-airports/', badge: 'IPLC/IEPL' },
+  { name: '月付机场', href: '/monthly-airports/', badge: '周期灵活' },
+  { name: 'Clash 机场', href: '/clash-airports/', badge: '规则分流' },
+  { name: 'Shadowrocket 机场', href: '/shadowrocket-airports/', badge: '小火箭' },
+  { name: 'ChatGPT 机场', href: '/chatgpt-airports/', badge: 'AI节点' },
+  { name: 'Netflix 机场', href: '/netflix-airports/', badge: '流媒体' },
+  { name: '香港节点', href: '/nodes/hong-kong/', badge: '距离较近' },
+  { name: '日本节点', href: '/nodes/japan/', badge: '东亚线路' },
+  { name: '新加坡节点', href: '/nodes/singapore/', badge: '东南亚' },
+  { name: '美国节点', href: '/nodes/us/', badge: '美区服务' },
+  { name: '游戏与低延迟', href: '/gaming-airports/', badge: '专线指南' },
+  { name: '新手入门', href: '/blog/how-to-choose-airport/', badge: '指南' },
+];
+
+const budgetCategories = [
+  { name: '¥10 以内', range: '0-10', desc: '轻度文献查阅与备用尝鲜', count: allAirports.filter(a => (a.lowestMonthlyPrice ?? 999) <= 10).length },
+  { name: '¥10 – ¥20', range: '10-20', desc: '主流性价比区间，常见个人首选', count: allAirports.filter(a => (a.lowestMonthlyPrice ?? 0) > 10 && (a.lowestMonthlyPrice ?? 999) <= 20).length },
+  { name: '¥20 – ¥30', range: '20-30', desc: '资料标为专线架构，适合中度使用', count: allAirports.filter(a => (a.lowestMonthlyPrice ?? 0) > 20 && (a.lowestMonthlyPrice ?? 999) <= 30).length },
+  { name: '¥30 – ¥50', range: '30-50', desc: '较大流量配额，适合高频多设备', count: allAirports.filter(a => (a.lowestMonthlyPrice ?? 0) > 30 && (a.lowestMonthlyPrice ?? 999) <= 50).length },
+  { name: '¥50 以上', range: '50+', desc: '大流量包或企业定制化需求', count: allAirports.filter(a => (a.lowestMonthlyPrice ?? 0) > 50).length },
+];
+
+const scenarioCategories = [
+  { name: 'ChatGPT / Claude', label: 'AI 工具', desc: '服务商资料标注支持主流 AI 平台访问', href: '/chatgpt-airports/' },
+  { name: 'Netflix / 流媒体', label: '影音追剧', desc: '资料标注支持海外流媒体解锁', href: '/netflix-airports/' },
+  { name: '游戏与低延迟选购', label: '联机加速', desc: '专线类型与 UDP 支持选购建议', href: '/gaming-airports/' },
+  { name: 'YouTube / 视频浏览', label: '视频流媒体', desc: '适合大流量配额与日常中转', href: '/airports/?purpose=netflix' },
+  { name: 'TikTok / 跨境业务', label: '跨境业务', desc: '需结合目标市场匹配对应地区节点', href: '/airports/?region=美国' },
+  { name: '海外办公与文献', label: '日常办公', desc: '满足网页查阅与多终端协同', href: '/monthly-airports/' },
+];
+
+const regionCategories = [
+  { name: '香港节点 (HK)', code: 'hk', tag: '物理距离近', desc: '国内访问较快，适合日常网页查阅与港区流媒体', href: '/nodes/hong-kong/' },
+  { name: '日本节点 (JP)', code: 'jp', tag: '东亚线路', desc: '适合日区流媒体、动漫与东亚网络连接', href: '/nodes/japan/' },
+  { name: '新加坡节点 (SG)', code: 'sg', tag: '东南亚枢纽', desc: '适合南中国网络直连与主流 AI 服务访问', href: '/nodes/singapore/' },
+  { name: '美国节点 (US)', code: 'us', tag: '美区服务', desc: 'AI 功能首发地区，美区影视片库资源丰富', href: '/nodes/us/' },
+  { name: '台湾节点 (TW)', code: 'tw', tag: '繁体中文区', desc: '适合巴哈姆特动漫与台区流媒体中文字幕', href: '/nodes/taiwan/' },
+  { name: '韩国节点 (KR)', code: 'kr', tag: '东亚节点', desc: '适合韩服手游联机与北方网络连接', href: '/nodes/korea/' },
+];
+
+const clientTools = [
+  { name: 'Clash / Verge', desc: '规则分流代理内核，全平台支持', href: '/clash-airports/' },
+  { name: 'Shadowrocket', desc: 'iOS 平台主流规则代理工具', href: '/shadowrocket-airports/' },
+  { name: 'sing-box', desc: '新一代高性能通用代理平台', href: '/blog/sing-box-universal-proxy-starter-guide/' },
+  { name: 'Surge', desc: 'Mac & iOS 高级网络调试工具', href: '/airports/?client=surge' },
+  { name: 'V2Ray / Xray', desc: '经典代理核心与通用客户端', href: '/airports/?client=clash' },
+];
+
+const beginnerFaqs = [
+  {
+    q: '新手刚接触，应该如何选择第一家机场？',
+    a: '建议优先选择支持【月付】且月费在 ¥15~¥25 之间的服务商。先购买 1 个月实测晚高峰延迟和个人常用网站的解锁情况，体验满意后再考虑续费。'
+  },
+  {
+    q: '什么是 IPLC / IEPL 专线？它与普通直连有什么区别？',
+    a: 'IPLC / IEPL 通常通过专用或优化链路提供跨境连接，相比普通公网路径可能具有更可控的线路质量，但实际延迟、拥塞和稳定性仍取决于服务商网络设计、用户本地运营商及具体时段。'
+  },
+  {
+    q: '如何将购买的机场导入到手机或电脑中？',
+    a: '购买套餐后，在机场后台复制【一键订阅链接】，然后打开 Clash Verge（电脑端）或 Shadowrocket（苹果手机端），在订阅设置中粘贴链接并下载节点即可。'
+  },
+  {
+    q: '为什么有些机场节点能看网页但打不开 ChatGPT？',
+    a: 'OpenAI 对 IP 纯净度和地理位置有较严格风控。香港节点和部分被多用户共享的机房 IP 可能会被拦截。建议尝试服务商标明支持 AI 或原生 IP 的美/日/新节点。'
+  }
+];
+---
+
+<Layout
+  title="找机场｜机场查询、筛选与使用指南 (ZHAOJICHANG.CYOU)"
+  description="找机场 (zhaojichang.cyou) 是面向中文用户的机场发现平台与使用指南目录。根据价格预算、Clash/Shadowrocket客户端、ChatGPT/Netflix用途、香港/日本/新加坡专线节点一键筛选适合你的机场服务。"
+>
+  <!-- ① Hero Section / 找机场搜索 (High visibility, compact height) -->
+  <section class="bg-gradient-to-b from-white via-sky-50/40 to-slate-50 border-b border-slate-200/80 pt-8 pb-10">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="max-w-3xl mx-auto text-center">
+        <!-- Badge -->
+        <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 text-slate-700 text-xs font-semibold mb-4 border border-slate-200">
+          <span class="w-2 h-2 rounded-full bg-sky-600"></span>
+          已收录 {allAirports.length} 家真实机场公开资料 ｜ 持续整理更新
+        </div>
+
+        <!-- H1 -->
+        <h1 class="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-slate-900 tracking-tight mb-3">
+          找机场
+        </h1>
+
+        <!-- Subtitle -->
+        <p class="text-base sm:text-lg text-slate-600 mb-6 leading-relaxed">
+          根据预算、节点、用途和设备，快速找到适合你的机场。
+        </p>
+
+        <!-- Search Bar -->
+        <div class="relative max-w-2xl mx-auto mb-5">
+          <button
+            type="button"
+            id="hero-search-trigger"
+            class="w-full flex items-center justify-between px-4 py-3.5 bg-white rounded-xl border border-slate-300 shadow-sm hover:border-sky-500 hover:shadow-md transition text-left group"
+          >
+            <div class="flex items-center gap-3">
+              <svg class="w-5 h-5 text-sky-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+              <span class="text-sm text-slate-400 group-hover:text-slate-600 transition">
+                搜索机场名称、节点地区（香港/日本/美国）、用途（ChatGPT/Netflix）...
+              </span>
+            </div>
+            <span class="hidden sm:inline-block px-2.5 py-1 text-xs font-semibold text-white bg-sky-600 rounded-md">
+              开始查找
+            </span>
+          </button>
+        </div>
+
+        <!-- Popular Fast Tags -->
+        <div class="flex items-center justify-center gap-2 flex-wrap text-xs">
+          <span class="text-slate-400 font-medium shrink-0">热门入口：</span>
+          {quickTags.map((tag) => (
+            <a
+              href={tag.href}
+              class="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-white border border-slate-200 text-slate-700 hover:text-sky-600 hover:border-sky-300 hover:bg-sky-50 transition shadow-2xs"
+            >
+              <span>{tag.name}</span>
+              <span class="text-[10px] text-slate-400 font-normal">({tag.badge})</span>
+            </a>
+          ))}
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ② 快速找机场导航卡片 (Quick Category Hub) -->
+  <section class="py-8 bg-white border-b border-slate-200/80">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <a
+          href="#budget-section"
+          class="p-4 rounded-xl border border-slate-200 bg-slate-50/60 hover:bg-sky-50 hover:border-sky-300 transition group flex flex-col justify-between"
+        >
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-xs font-bold text-sky-700 uppercase tracking-wider">按预算查找</span>
+            <span class="text-xs px-1.5 py-0.5 rounded bg-white border border-slate-200 text-slate-500 font-mono">¥</span>
+          </div>
+          <p class="text-sm font-bold text-slate-800 group-hover:text-sky-600 transition">价格梯度速查</p>
+          <p class="text-xs text-slate-500 mt-1">¥10以内 ~ ¥50+ 各档位套餐</p>
+        </a>
+
+        <a
+          href="#scenario-section"
+          class="p-4 rounded-xl border border-slate-200 bg-slate-50/60 hover:bg-sky-50 hover:border-sky-300 transition group flex flex-col justify-between"
+        >
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-xs font-bold text-slate-700 uppercase tracking-wider">按用途查找</span>
+            <span class="text-xs px-1.5 py-0.5 rounded bg-white border border-slate-200 text-slate-500 font-mono">TAG</span>
+          </div>
+          <p class="text-sm font-bold text-slate-800 group-hover:text-sky-600 transition">使用场景匹配</p>
+          <p class="text-xs text-slate-500 mt-1">ChatGPT / Netflix / 办公</p>
+        </a>
+
+        <a
+          href="#region-section"
+          class="p-4 rounded-xl border border-slate-200 bg-slate-50/60 hover:bg-sky-50 hover:border-sky-300 transition group flex flex-col justify-between"
+        >
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-xs font-bold text-slate-700 uppercase tracking-wider">按地区查找</span>
+            <span class="text-xs px-1.5 py-0.5 rounded bg-white border border-slate-200 text-slate-500 font-mono">GEO</span>
+          </div>
+          <p class="text-sm font-bold text-slate-800 group-hover:text-sky-600 transition">专线节点覆盖</p>
+          <p class="text-xs text-slate-500 mt-1">香港 / 日本 / 新加坡 / 美国</p>
+        </a>
+
+        <a
+          href="#client-section"
+          class="p-4 rounded-xl border border-slate-200 bg-slate-50/60 hover:bg-sky-50 hover:border-sky-300 transition group flex flex-col justify-between"
+        >
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-xs font-bold text-slate-700 uppercase tracking-wider">按客户端查找</span>
+            <span class="text-xs px-1.5 py-0.5 rounded bg-white border border-slate-200 text-slate-500 font-mono">APP</span>
+          </div>
+          <p class="text-sm font-bold text-slate-800 group-hover:text-sky-600 transition">软件工具适配</p>
+          <p class="text-xs text-slate-500 mt-1">Clash / 小火箭 / sing-box</p>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ③ 精选机场资料速览 (Airport Catalog Overview) -->
+  <section class="py-12 bg-slate-50/60">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8">
+        <div>
+          <div class="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1">
+            <span class="w-1.5 h-1.5 rounded-full bg-sky-600"></span>
+            机场资料速览
+          </div>
+          <h2 class="text-2xl font-bold text-slate-900 tracking-tight">
+            精选机场资料速览
+          </h2>
+          <p class="text-xs text-slate-500 mt-1">
+            基于服务商公开资料整理，展示线路架构、支持客户端、标注解锁与资费信息。
+          </p>
+        </div>
+
+        <a
+          href="/airports/"
+          class="inline-flex items-center gap-1 text-xs font-semibold text-sky-600 hover:text-sky-700 bg-white px-3.5 py-2 rounded-lg border border-slate-200 hover:border-sky-300 shadow-2xs transition shrink-0"
+        >
+          查看全部 {allAirports.length} 家机场目录
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+          </svg>
+        </a>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {overviewAirports.map((airport) => (
+          <AirportCard airport={airport} />
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- ④ 按预算找机场 (Budget Breakdown) -->
+  <section id="budget-section" class="py-12 bg-white border-t border-b border-slate-200/80">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="text-center max-w-2xl mx-auto mb-10">
+        <h2 class="text-2xl font-bold text-slate-900 tracking-tight mb-2">
+          按预算找机场
+        </h2>
+        <p class="text-xs text-slate-500">
+          根据每月的花费预算精准定位，了解不同价位机场的配置差异。
+        </p>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
+        {budgetCategories.map((b) => (
+          <a
+            href={`/airports/?price=${b.range}`}
+            class="p-5 rounded-xl border border-slate-200 bg-slate-50 hover:bg-sky-50/60 hover:border-sky-300 transition flex flex-col justify-between group"
+          >
+            <div>
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-base font-bold text-slate-900 group-hover:text-sky-600 transition">{b.name}</span>
+                <span class="text-xs px-2 py-0.5 rounded-full bg-white border border-slate-200 text-slate-600 font-semibold">{b.count} 家</span>
+              </div>
+              <p class="text-xs text-slate-500 leading-relaxed">{b.desc}</p>
+            </div>
+            <div class="mt-4 pt-3 border-t border-slate-200/60 text-xs font-semibold text-sky-600 flex items-center gap-1 group-hover:translate-x-0.5 transition">
+              查看符合机场 →
+            </div>
+          </a>
+        ))}
+      </div>
+
+      <!-- Quick Cheap Showcase -->
+      <div class="bg-slate-50 rounded-xl border border-slate-200/90 p-6">
+        <div class="flex items-center justify-between mb-4">
+          <div class="flex items-center gap-2">
+            <span class="text-sm font-bold text-slate-800">¥20 以内高性价比精选</span>
+            <span class="text-xs text-slate-500 hidden sm:inline">（适合轻度至中度出海需求）</span>
+          </div>
+          <a href="/cheap-airports/" class="text-xs font-semibold text-sky-600 hover:underline">
+            进入便宜机场专区 →
+          </a>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {cheapAirports.slice(0, 3).map((a) => (
+            <div class="bg-white p-4 rounded-lg border border-slate-200 flex items-center justify-between">
+              <div>
+                <a href={`/airport/${a.slug}/`} class="text-sm font-bold text-slate-800 hover:text-sky-600">
+                  {a.name}
+                </a>
+                <p class="text-xs text-slate-500 mt-0.5">月付 ¥{a.lowestMonthlyPrice} 起 ｜ {a.lineArchitecture.slice(0, 12)}</p>
+              </div>
+              <a href={`/airport/${a.slug}/`} class="text-xs text-sky-600 font-medium hover:underline shrink-0 ml-2">
+                详情
+              </a>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ⑤ 按用途与使用场景找机场 (Use Case Scenarios) -->
+  <section id="scenario-section" class="py-12 bg-slate-50/60">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="text-center max-w-2xl mx-auto mb-10">
+        <h2 class="text-2xl font-bold text-slate-900 tracking-tight mb-2">
+          按使用场景找机场
+        </h2>
+        <p class="text-xs text-slate-500">
+          针对 AI 工具、流媒体及跨国游戏等高频需求进行分类导引。
+        </p>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+        {scenarioCategories.map((s) => (
+          <a
+            href={s.href}
+            class="p-5 bg-white rounded-xl border border-slate-200 hover:border-sky-300 hover:shadow-xs transition group flex items-start gap-4"
+          >
+            <div class="w-10 h-10 rounded-lg bg-slate-100 text-slate-700 text-xs font-bold flex items-center justify-center shrink-0 border border-slate-200">
+              {s.label.slice(0, 2)}
+            </div>
+            <div class="flex-1">
+              <h3 class="text-base font-bold text-slate-900 group-hover:text-sky-600 transition">
+                {s.name}
+              </h3>
+              <p class="text-xs text-slate-500 mt-1 leading-relaxed">
+                {s.desc}
+              </p>
+              <div class="mt-2 text-xs font-medium text-sky-600 flex items-center gap-1">
+                查看适配机场
+                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                </svg>
+              </div>
+            </div>
+          </a>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- ⑥ 按节点地区找机场 (Node Regions) -->
+  <section id="region-section" class="py-12 bg-white border-t border-b border-slate-200/80">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8">
+        <div>
+          <h2 class="text-2xl font-bold text-slate-900 tracking-tight mb-1">
+            按节点地区找机场
+          </h2>
+          <p class="text-xs text-slate-500">
+            按香港、日本、新加坡、美国、台湾与韩国等核心地区进行分类索引。
+          </p>
+        </div>
+        <a href="/airports/" class="text-xs font-semibold text-sky-600 hover:underline">
+          查看所有节点覆盖 →
+        </a>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+        {regionCategories.map((r) => (
+          <a
+            href={r.href}
+            class="p-5 rounded-xl border border-slate-200 bg-slate-50/50 hover:bg-sky-50/50 hover:border-sky-300 transition group"
+          >
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-base font-bold text-slate-900 group-hover:text-sky-600 transition">{r.name}</span>
+              <span class="text-xs px-2 py-0.5 rounded bg-white border border-slate-200 text-slate-600 font-medium">
+                {r.tag}
+              </span>
+            </div>
+            <p class="text-xs text-slate-500 mb-3">{r.desc}</p>
+            <div class="text-xs font-semibold text-sky-600 flex items-center gap-1 group-hover:translate-x-0.5 transition">
+              查找支持该地区的机场 →
+            </div>
+          </a>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- ⑦ 按客户端工具找机场 (Clients & Tools) -->
+  <section id="client-section" class="py-12 bg-slate-50/60">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="text-center max-w-2xl mx-auto mb-10">
+        <h2 class="text-2xl font-bold text-slate-900 tracking-tight mb-2">
+          按客户端与协议找机场
+        </h2>
+        <p class="text-xs text-slate-500">
+          支持 Clash、Clash Verge、Shadowrocket (小火箭)、Surge、sing-box 常见客户端订阅。
+        </p>
+      </div>
+
+      <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+        {clientTools.map((c) => (
+          <a
+            href={c.href}
+            class="p-4 bg-white rounded-xl border border-slate-200 hover:border-sky-300 hover:shadow-xs transition text-center group"
+          >
+            <div class="w-10 h-10 rounded-lg bg-slate-100 text-slate-700 mx-auto flex items-center justify-center font-bold text-xs mb-2 border border-slate-200 group-hover:bg-sky-600 group-hover:text-white transition">
+              {c.name.slice(0, 2)}
+            </div>
+            <h3 class="text-sm font-bold text-slate-900 group-hover:text-sky-600 transition mb-1">{c.name}</h3>
+            <p class="text-[11px] text-slate-500 leading-tight">{c.desc}</p>
+          </a>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- ⑧ 找机场指南与教程 (Featured Articles) -->
+  <section class="py-12 bg-white border-t border-b border-slate-200/80">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8">
+        <div>
+          <h2 class="text-2xl font-bold text-slate-900 tracking-tight mb-1">
+            找机场精选指南与教程
+          </h2>
+          <p class="text-xs text-slate-500">
+            从新手买机场避坑、价格资费分析，到客户端配置与节点排错。
+          </p>
+        </div>
+        <a href="/blog/" class="text-xs font-semibold text-sky-600 hover:underline">
+          查看全部 22 篇深度指南 →
+        </a>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {featuredArticles.map((art) => (
+          <article class="bg-slate-50/60 rounded-xl border border-slate-200 p-5 flex flex-col justify-between hover:bg-white hover:border-sky-300 hover:shadow-sm transition group">
+            <div>
+              <div class="flex items-center gap-2 mb-2">
+                <span class="text-xs px-2 py-0.5 rounded bg-sky-100/70 text-sky-700 font-medium">
+                  {art.categoryLabel}
+                </span>
+                <span class="text-xs text-slate-400">{art.readTime}</span>
+              </div>
+              <h3 class="text-base font-bold text-slate-900 group-hover:text-sky-600 transition mb-2">
+                <a href={`/blog/${art.slug}/`}>
+                  {art.title}
+                </a>
+              </h3>
+              <p class="text-xs text-slate-600 line-clamp-2 leading-relaxed">
+                {art.description}
+              </p>
+            </div>
+            <div class="mt-4 pt-3 border-t border-slate-200/70 flex items-center justify-between text-xs text-slate-500">
+              <span>{art.publishDate}</span>
+              <a href={`/blog/${art.slug}/`} class="text-sky-600 font-semibold group-hover:underline flex items-center gap-1">
+                阅读全文
+                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                </svg>
+              </a>
+            </div>
+          </article>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- ⑨ 新手专区与常见疑问 (Beginner Section & FAQ) -->
+  <section class="py-12 bg-slate-50/60">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="text-center mb-8">
+        <h2 class="text-2xl font-bold text-slate-900 tracking-tight mb-2">
+          新手找机场常见问题 (FAQ)
+        </h2>
+        <p class="text-xs text-slate-500">
+          初次选购与使用机场，先了解这些基本常识，防止踩坑。
+        </p>
+      </div>
+
+      <div class="space-y-4">
+        {beginnerFaqs.map((faq) => (
+          <div class="bg-white rounded-xl border border-slate-200 p-5 shadow-2xs">
+            <h3 class="text-sm font-bold text-slate-900 flex items-start gap-2 mb-2">
+              <span class="text-sky-600 font-bold shrink-0">Q:</span>
+              <span>{faq.q}</span>
+            </h3>
+            <p class="text-xs text-slate-600 leading-relaxed pl-6">
+              {faq.a}
+            </p>
+          </div>
+        ))}
+      </div>
+
+      <!-- Beginner Action Links -->
+      <div class="mt-8 p-6 bg-white rounded-2xl border border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div>
+          <h4 class="text-sm font-bold text-slate-900 mb-1">想要从零系统学习如何挑选与配置机场？</h4>
+          <p class="text-xs text-slate-500">阅读《新手找机场完整指南》，了解线路、客户端与防跑路常识。</p>
+        </div>
+        <a
+          href="/blog/how-to-choose-airport/"
+          class="px-4 py-2 text-xs font-semibold text-white bg-sky-600 hover:bg-sky-700 rounded-lg shadow-sm transition shrink-0"
+        >
+          查看新手指南
+        </a>
+      </div>
+    </div>
+  </section>
+</Layout>
